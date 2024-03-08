@@ -5,7 +5,18 @@
 PredInterval is a statistical method that quantifies polygenic score (PGS)-based phenotype prediction uncertainty through the construction of well-calibrated prediction intervals. PredInterval is non-parametric in natural and extracts information based on quantiles of phenotypic residuals through cross-validations, thus achieving well-calibrated coverage of true phenotypic values. In addition, the PredInterval framework is general and can be paired with any PGS method or pre-computed SNP effect sizes obtained from publicly available resources.
     
 # How to use PredInterval
-
+Example codes for the construction of 95% prediction interval for PGS-based phenotype prediction based on 5-fold cross-validation
+```r
+workdir=/your/data/directory
+pheno_train=${workdir}/pheno_train.txt
+PGS_train_prefix=${workdir}/train_PGS_subset
+test_fam=${workdir}/test_set.fam
+PGS_test_prefix=${workdir}/test_PGS_subset
+cv_fold=5
+output=${workdir}/CI_output.txt
+conf_level=0.95
+Rscript PredInterval.R ${pheno_train} ${PGS_train_prefix} ${test_fam} ${PGS_test_prefix} ${cv_fold} ${output} ${conf_level} 
+```
 
 # Citations
 
