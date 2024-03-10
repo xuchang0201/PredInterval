@@ -1,4 +1,4 @@
-# PGS-based phenotype prediction interval (PredInterval)
+# PGS-based Phenotype Prediction Interval (PredInterval)
 
 ![PredInterval schematic plot](https://github.com/xuchang0201/PredInterval/assets/41645824/f2dc42f0-191c-4566-8ff3-e5a96a2e06ec)
 
