@@ -6,8 +6,8 @@ PredInterval is a statistical method that quantifies polygenic score (PGS)-based
     
 # How to use PredInterval
 There are two versions of PredInterval:
-1. Individual-level version of PredInterval: construct phenotypic prediction intervals using individual-level genotype and phenotype from the training sample
-2. Summary statistics version of PredInterval: construct phenotypic prediction intervals using summary statistics and a small calibration dataset
+1. Individual-level version of PredInterval: construct phenotypic prediction intervals using individual-level genotype and phenotype from the training sample.
+2. Summary statistics version of PredInterval: construct phenotypic prediction intervals using summary statistics as training data and a small calibration set for phenotypic residual-based calibration. 
 
 # Tutorial for PredInterval
 Example codes for the construction of 95% prediction interval for PGS-based phenotype prediction based on 5-fold cross-validations
