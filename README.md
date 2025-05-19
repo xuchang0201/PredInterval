@@ -26,8 +26,9 @@ Rscript PredInterval.R ${pheno_train} ${PGS_train_prefix} ${test_fam} ${PGS_test
 ```
 
 # Summary Statistics from PredInterval Manuscript
-To further reproducibility, we have deposited the summary statistics for the 12 traits in the UKB generated in this manuscript in the google drive link: 
-1. [Full Summary statistics](https://drive.google.com/file/d/1Vtb-0IdevPRzhPib-blbjeAgOyUDxj73/view?usp=drive_link)
+To further support reproducibility, we have deposited the summary statistics for the 12 traits in the UKB generated in this manuscript in the google drive link: 
+1. [Full Summary statistics](https://drive.google.com/file/d/1Vtb-0IdevPRzhPib-blbjeAgOyUDxj73/view?usp=drive_link): Summary Statistics for the entire training set, used for other benchmark comparison methods
+2. [Partitioned Summary statistics](https://drive.google.com/file/d/1IyoqM3ZNTaTMyVCHM1UCjFYCOCtdrw7i/view?usp=drive_link): Summary statistics with each of the five fold removed from the training set, used as input for PredInterval model fitting
 
 # Citations
 
