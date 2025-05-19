@@ -25,7 +25,7 @@ conf_level=0.95
 Rscript PredInterval.R ${pheno_train} ${PGS_train_prefix} ${test_fam} ${PGS_test_prefix} ${cv_fold} ${output} ${conf_level} 
 ```
 # Example
-Example codes for fitting individual-level version of PredInterval using toy example data:
+Example codes for fitting individual-level version of PredInterval using toy example data (number of folds=5 for the cross-validation procedure, confidence level=95%):
 ```r
 workdir=/your/PredInterval/directory
 Rscript ${workdir}/PredInterval.R ${workdir}/toy_ind/pheno_training.txt \
