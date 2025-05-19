@@ -26,14 +26,14 @@ Rscript PredInterval.R ${pheno_train} ${PGS_train_prefix} ${test_fam} ${PGS_test
 ```
 # Example
 Example codes for fitting PredInterval using toy example to construct 95% confidence interval for PGS-based phenotypic prediction (number of folds=5 for the cross-validation procedure):
-1. Fitting individual-level version of PredInterval (toy example data located in the [Individual_Level](https://github.com/xuchang0201/PredInterval/tree/main/Toy%20Example/Individual_Level)
+1. Fitting individual-level version of PredInterval (toy example data located in the [Individual Level](https://github.com/xuchang0201/PredInterval/tree/main/Toy%20Example/Individual_Level)
 ```r
 workdir=/your/PredInterval/directory
 Rscript ${workdir}/PredInterval.R ${workdir}/Individual_Level/pheno_training.txt \
 ${workdir}/Individual_Level/training_PGS_subset ${workdir}/Individual_Level/test.fam \
 ${workdir}/Individual_Level/test_PGS_removing_subset 5 ${workdir}/output/CI_ind.txt 0.95
 ```
-2. Fitting summary statistics version of PredInterval (toy example data located in the [Summary_Statistics](https://github.com/xuchang0201/PredInterval/tree/main/Toy%20Example/Summary_Statistics)
+2. Fitting summary statistics version of PredInterval (toy example data located in the [Summary Statistics](https://github.com/xuchang0201/PredInterval/tree/main/Toy%20Example/Summary_Statistics)
 ```r
 workdir=/your/PredInterval/directory
 Rscript ${workdir}/PredInterval_sumstat.R ${workdir}/Summary_Statistics/pheno_cali_sumstat_demo.txt \
