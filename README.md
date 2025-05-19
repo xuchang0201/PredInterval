@@ -24,6 +24,12 @@ output=${workdir}/CI_output.txt
 conf_level=0.95
 Rscript PredInterval.R ${pheno_train} ${PGS_train_prefix} ${test_fam} ${PGS_test_prefix} ${cv_fold} ${output} ${conf_level} 
 ```
+# Example
+Example codes for fitting individual-level version of PredInterval using toy example data:
+```r
+workdir=/your/PredInterval/directory
+Rscript ${workdir}/PredInterval.R ${workdir}/toy_ind/pheno_training.txt ${workdir}/toy_ind/training_PGS_subset ${workdir}/toy_ind/test.fam ${workdir}/toy_ind/test_PGS_removing_subset 5 ${workdir}/output/CI_ind.txt 0.95
+```
 
 # Summary Statistics from PredInterval Manuscript
 To further support reproducibility, we have deposited the summary statistics for the 12 traits in the UKB generated in this manuscript in the google drive link: 
