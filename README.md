@@ -12,7 +12,6 @@ There are two versions of PredInterval:
 For detailed introduction of model fitting algorithm, please refer to the paper and documentations.  
 
 # Tutorial for PredInterval
-Example codes for the construction of 95% prediction interval for PGS-based phenotype prediction based on 5-fold cross-validations
 ```r
 workdir=/your/data/directory
 pheno_train=${workdir}/pheno_train.txt
