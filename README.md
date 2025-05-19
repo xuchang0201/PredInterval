@@ -25,19 +25,20 @@ conf_level=0.95
 Rscript PredInterval.R ${pheno_train} ${PGS_train_prefix} ${test_fam} ${PGS_test_prefix} ${cv_fold} ${output} ${conf_level} 
 ```
 # Example
-Example codes for fitting **individual-level version of PredInterval** using toy example data (number of folds=5 for the cross-validation procedure, confidence level=95%):
+Example codes for fitting PredInterval using toy example to construct 95% confidence interval for PGS-based phenotypic prediction (number of folds=5 for the cross-validation procedure):
+1. Fitting individual-level version of PredInterval (toy example data located in the [Individual_Level](https://github.com/xuchang0201/PredInterval/tree/main/Toy%20Example/Individual_Level)
 ```r
 workdir=/your/PredInterval/directory
-Rscript ${workdir}/PredInterval.R ${workdir}/toy_ind/pheno_training.txt \
-${workdir}/toy_ind/training_PGS_subset ${workdir}/toy_ind/test.fam \
-${workdir}/toy_ind/test_PGS_removing_subset 5 ${workdir}/output/CI_ind.txt 0.95
+Rscript ${workdir}/PredInterval.R ${workdir}/Individual_Level/pheno_training.txt \
+${workdir}/Individual_Level/training_PGS_subset ${workdir}/Individual_Level/test.fam \
+${workdir}/Individual_Level/test_PGS_removing_subset 5 ${workdir}/output/CI_ind.txt 0.95
 ```
-Example codes for fitting **summary statistics version of PredInterval** using toy example data (number of folds=5 for the cross-validation procedure, confidence level=95%):
+2. Fitting summary statistics version of PredInterval (toy example data located in the [Summary_Statistics](https://github.com/xuchang0201/PredInterval/tree/main/Toy%20Example/Summary_Statistics)
 ```r
 workdir=/your/PredInterval/directory
-Rscript ${workdir}/PredInterval_sumstat.R ${workdir}/toy_sumstat/pheno_cali_sumstat_demo.txt \
-${workdir}/toy_sumstat/cali_PGS_subset ${workdir}/toy_sumstat/test_sumstat_demo.fam \
-${workdir}/toy_sumstat/test_sumstat_demo_PGS_removing_subset 5 ${workdir}/output/CI_sumstat.txt 0.95
+Rscript ${workdir}/PredInterval_sumstat.R ${workdir}/Summary_Statistics/pheno_cali_sumstat_demo.txt \
+${workdir}/Summary_Statistics/cali_PGS_subset ${workdir}/Summary_Statistics/test_sumstat_demo.fam \
+${workdir}/Summary_Statistics/test_sumstat_demo_PGS_removing_subset 5 ${workdir}/output/CI_sumstat.txt 0.95
 ```
 
 
