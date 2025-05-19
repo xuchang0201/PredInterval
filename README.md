@@ -25,13 +25,22 @@ conf_level=0.95
 Rscript PredInterval.R ${pheno_train} ${PGS_train_prefix} ${test_fam} ${PGS_test_prefix} ${cv_fold} ${output} ${conf_level} 
 ```
 # Example
-Example codes for fitting individual-level version of PredInterval using toy example data (number of folds=5 for the cross-validation procedure, confidence level=95%):
+Example codes for fitting **individual-level version of PredInterval** using toy example data (number of folds=5 for the cross-validation procedure, confidence level=95%):
 ```r
 workdir=/your/PredInterval/directory
 Rscript ${workdir}/PredInterval.R ${workdir}/toy_ind/pheno_training.txt \
 ${workdir}/toy_ind/training_PGS_subset ${workdir}/toy_ind/test.fam \
 ${workdir}/toy_ind/test_PGS_removing_subset 5 ${workdir}/output/CI_ind.txt 0.95
 ```
+Example codes for fitting **summary statistics version of PredInterval** using toy example data (number of folds=5 for the cross-validation procedure, confidence level=95%):
+```r
+workdir=/your/PredInterval/directory
+Rscript ${workdir}/PredInterval_sumstat.R ${workdir}/toy_sumstat/pheno_cali_sumstat_demo.txt \
+${workdir}/toy_sumstat/cali_PGS_subset ${workdir}/toy_sumstat/test_sumstat_demo.fam \
+${workdir}/toy_sumstat/test_sumstat_demo_PGS_removing_subset 5 ${workdir}/output/CI_sumstat.txt 0.95
+```
+
+
 
 # Summary Statistics from PredInterval Manuscript
 To further support reproducibility, we have deposited the summary statistics for the 12 traits in the UKB generated in this manuscript in the google drive link: 
