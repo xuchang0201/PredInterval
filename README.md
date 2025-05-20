@@ -23,6 +23,8 @@ For individual-level version of PredInterval, it requires individual-level genot
 3. Apply the SNP effect size estimates from step 2 to compute PGSs for subset *i* and test set using the **score** function in PLINK
 4. Repeat step 2 and 3 for *k* times and obtain *k* PGSs for the *k* subsets (e.g., train_PGS_subset_1.profile, ..., train_PGS_subset_k.profile) as well as *k* PGSs for the test set (e.g., test_PGS_subset_1.profile, ..., test_PGS_subset_k.profile)
 5. Fit PredInterval to construct phenotypic prediction intervals with the pre-specified confidence level (e.g., 95%)
+
+Example command:
 ```r
 workdir=/your/data/directory
 pheno_train=${workdir}/pheno_train.txt
@@ -32,7 +34,9 @@ PGS_test_prefix=${workdir}/test_PGS_subset
 cv_fold=5
 output=${workdir}/CI_output.txt
 conf_level=0.95
-Rscript PredInterval.R ${pheno_train} ${PGS_train_prefix} ${test_fam} ${PGS_test_prefix} ${cv_fold} ${output} ${conf_level} 
+Rscript ${workdir}/PredInterval.R ${pheno_train} \
+${PGS_train_prefix} ${test_fam} \
+${PGS_test_prefix} ${cv_fold} ${output} ${conf_level}
 ```
 # Example
 Example codes for fitting PredInterval using toy example to construct 95% confidence interval for PGS-based phenotypic prediction (number of folds=5 for the cross-validation procedure):
