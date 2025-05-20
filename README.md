@@ -18,8 +18,8 @@ The PredInterval fitting can be generally divided into three steps:
 3. Applying PredInterval to construct PGS-based phenotypic prediction intervals
 
 For **individual-level version of PredInterval**, it requires individual-level genotype and phenotype data of training set and can be fitted based on the following steps:
-1. For a pre-specified number of fold *k* (we recommend *k=5*), partition the training set into *k* equal-sized disjoint subsets.
-2. 
+1. For a pre-specified number of fold *k* (we recommend *k*=5), partition the training set into *k* equal-sized disjoint subsets.
+2. For each subset in term, use the 
 ```r
 workdir=/your/data/directory
 pheno_train=${workdir}/pheno_train.txt
