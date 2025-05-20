@@ -20,7 +20,7 @@ The PredInterval fitting can be generally divided into three steps:
 For **individual-level version of PredInterval**, it requires individual-level genotype and phenotype data of training set and can be fitted based on the following steps:
 1. For a pre-specified number of fold *k* (we recommend *k*=5), partition the training set into *k* equal-sized disjoint subsets.
 2. For each subset *i* in term, fit a PGS method of choice using the data of the remaining *k*-1 subsets to obtain SNP effect size estimates
-3. Apply the SNP effect size estimates from step 2 to compute PGSs for subset *i* using the ** score ** function in PLINK
+3. Apply the SNP effect size estimates from step 2 to compute PGSs for subset *i* using the **score** function in PLINK
 4. Repeat step 2 and 3 for *k* times and obtain PGSs for the *k* subsets (e.g., train_PGS_subset_1.profile, ..., train_PGS_subset_k.profile) as well as *k* PGSs for the test set (e.g., test_PGS_subset_1.profile, ..., test_PGS_subset_k.profile)
 ```r
 workdir=/your/data/directory
