@@ -16,7 +16,7 @@ The PredInterval fitting can be generally divided into three steps:
 
 For detailed introduction of model fitting algorithm, please refer to the paper and documentations.  
 
-# Tutorial for Individual-level Version of PredInterval
+# Tutorial for Individual-Level Version of PredInterval
 For individual-level version of PredInterval, it requires individual-level genotype and phenotype data of training set and can be fitted based on the following steps:
 1. For a pre-specified number of fold *k* (we recommend *k*=5), partition the training set into *k* equal-sized disjoint subsets.
 2. For each subset *i* in term, fit a PGS method of choice using the data of the remaining *k*-1 subsets to obtain SNP effect size estimates
