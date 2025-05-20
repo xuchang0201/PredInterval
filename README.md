@@ -39,7 +39,7 @@ ${PGS_test_prefix} ${cv_fold} ${output} ${conf_level}
 ```
 The inputs and format requirements are:
 1. pheno_train: file name for phenotypes of training set. The phenotype file of training set should only include two columns, with first column being sample id and the second column being the phenotypic value.
-2. PGS_train_prefix: prefix for the PGSs of *k* subsets of training set from PLINK. Note that the file names of PGSs of *k* training subsets must be named as ${PGS_train_prefix}_subset_1.profile, ..., ${PGS_train_prefix}_subset_k.profile.
+2. PGS_train_prefix: prefix for the PGSs of *k* subsets of training set from PLINK. Note that the file names of PGSs of *k* training subsets must be named as ${PGS_train_prefix}_subset_1.profile, ${PGS_train_prefix}_subset_2.profile, ..., ${PGS_train_prefix}_subset_k.profile.
 
 
 # Example
