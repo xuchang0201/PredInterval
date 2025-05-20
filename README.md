@@ -76,6 +76,14 @@ Rscript PredInterval_sumstat.R ${pheno_cali} \
 ${PGS_cali_prefix} ${test_fam} \
 ${PGS_test_prefix} 5 ${output} 0.95
 ```
+The inputs and format requirements are:
+1. **pheno_cali**: file name for phenotypes of calibration set (two columns only, with first column being sample id and the second column being the phenotypic value).
+2. **PGS_cali_prefix**: prefix for the *k* PGSs of calibration set from PLINK. Note that the file names must be named as ${PGS_cali_prefix}_subset_1.profile, ${PGS_cali_prefix}_subset_2.profile, ..., ${PGS_cali_prefix}_subset_k.profile.
+3. **test_fam**: fam file of genotype data for the test set.
+4. **PGS_test_prefix**: prefix for the *k* PGSs of test set from PLINK. Similarly, the file names must be named as ${PGS_test_prefix}_subset_1.profile, ${PGS_test_prefix}_subset_2.profile, ..., ${PGS_test_prefix}_subset_k.profile.
+5. **cv_fold**: number of folds for cross-validation
+6. **output**: file name of output
+7. **conf_level**: target confidence level (e.g., 0.95 for 95% confidence level). 
 
 # Example
 Example codes for fitting PredInterval using toy example to construct 95% confidence interval for PGS-based phenotypic prediction (number of folds=5 for the cross-validation procedure):
