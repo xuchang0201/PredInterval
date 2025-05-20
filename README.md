@@ -19,10 +19,10 @@ For detailed introduction of model fitting algorithm, please refer to the paper 
 # Tutorial for Individual-Level Version of PredInterval
 For individual-level version of PredInterval, it requires individual-level genotype and phenotype data of training set and can be fitted based on the following steps:
 1. For a pre-specified number of fold *k* (we recommend *k*=5), partition the training set into *k* equal-sized disjoint subsets.
-2. For each subset *i* in term, fit a PGS method of choice using the data of the remaining *k*-1 subsets to obtain SNP effect size estimates
-3. Apply the SNP effect size estimates from step 2 to compute PGSs for subset *i* and test set using the **score** function in PLINK
-4. Repeat step 2 and 3 for *k* times and obtain *k* PGSs for the *k* subsets (e.g., train_PGS_subset_1.profile, ..., train_PGS_subset_k.profile) as well as *k* PGSs for the test set (e.g., test_PGS_subset_1.profile, ..., test_PGS_subset_k.profile)
-5. Fit PredInterval to construct phenotypic prediction intervals with the pre-specified confidence level (e.g., 95%)
+2. For each subset *i* in term, fit a PGS method of choice using the data of the remaining *k*-1 subsets to obtain SNP effect size estimates.
+3. Apply the SNP effect size estimates from step 2 to compute PGSs for subset *i* and test set using the **score** function in PLINK.
+4. Repeat step 2 and 3 for *k* times and obtain *k* PGSs for the *k* subsets (e.g., train_PGS_subset_1.profile, ..., train_PGS_subset_k.profile) as well as *k* PGSs for the test set (e.g., test_PGS_subset_1.profile, ..., test_PGS_subset_k.profile).
+5. Fit PredInterval to construct phenotypic prediction intervals with the pre-specified confidence level (e.g., 95%).
 
 Example command:
 ```r
@@ -59,9 +59,23 @@ The outputs from the above code are five subsampled summary statistics: ${trait}
 
 2. For each subsampled summary statistics in turn, fit a PGS method of choice using this data to obtain SNP effect size estimates. 
 
-3. Apply the SNP effect size estimates from step 2 to compute PGSs for calibration and test set using the **score** function in PLINK
-4. Repeat step 2 and 3 for all *k* subsampled summary statistics, and obtain *k* PGSs for the calibration set (e.g., cali_PGS_subset_1.profile, ..., cali_PGS_subset_k.profile) and *k* PGSs for the test set (e.g., test_PGS_subset_1.profile, ..., test_PGS_subset_k.profile)
-5. Fit PredInterval to construct phenotypic prediction intervals with the pre-specified confidence level (e.g., 95%)
+3. Apply the SNP effect size estimates from step 2 to compute PGSs for calibration and test set using the **score** function in PLINK.
+4. Repeat step 2 and 3 for all *k* subsampled summary statistics, and obtain *k* PGSs for the calibration set (e.g., cali_PGS_subset_1.profile, ..., cali_PGS_subset_k.profile) and *k* PGSs for the test set (e.g., test_PGS_subset_1.profile, ..., test_PGS_subset_k.profile).
+5. Fit PredInterval to construct phenotypic prediction intervals with the pre-specified confidence level (e.g., 95%).
+
+Example command:
+```r
+pheno_cali=pheno_cali.txt
+PGS_cali_prefix=cali_PGS_subset
+test_fam=test_set.fam
+PGS_test_prefix=test_PGS_subset
+cv_fold=5
+output=CI_sumstat.txt
+conf_level=0.95
+Rscript PredInterval_sumstat.R ${pheno_cali} \
+${PGS_cali_prefix} ${test_fam} \
+${PGS_test_prefix} 5 ${output} 0.95
+```
 
 # Example
 Example codes for fitting PredInterval using toy example to construct 95% confidence interval for PGS-based phenotypic prediction (number of folds=5 for the cross-validation procedure):
