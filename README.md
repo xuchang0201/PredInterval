@@ -14,12 +14,14 @@ For detailed introduction of model fitting algorithm, please refer to the paper 
 # Tutorial for PredInterval
 The PredInterval fitting can be generally divided into three steps:
 1. Partitioning training dataset into *k* folds for cross-validation procedure
-2. Fitting PGS method of choice to compute PGSs as inputs for PredInterval
+2. Fitting a PGS method of choice to compute PGSs as inputs for PredInterval
 3. Applying PredInterval to construct PGS-based phenotypic prediction intervals
 
 For **individual-level version of PredInterval**, it requires individual-level genotype and phenotype data of training set and can be fitted based on the following steps:
 1. For a pre-specified number of fold *k* (we recommend *k*=5), partition the training set into *k* equal-sized disjoint subsets.
-2. For each subset in term, use the 
+2. For each subset *i* in term, fit a PGS method of choice using the data of the remaining *k*-1 subsets to obtain SNP effect size estimates (can be any arbitrary PGS method that takes either individual-level data or summary statistics)
+3. Apply the SNP effect size estimates from step 2 to compute PGSs for subset *i* using the ** score ** function in PLINK
+4. Repeat step 2 and 3 for *k* times
 ```r
 workdir=/your/data/directory
 pheno_train=${workdir}/pheno_train.txt
