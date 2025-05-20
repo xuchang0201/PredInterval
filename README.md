@@ -47,6 +47,7 @@ The inputs and format requirements are:
 7. **conf_level**: target confidence level (e.g., 0.95 for 95% confidence level). 
 
 # Tutorial for Summary Statistics Version of PredInterval
+For summary statistics version of PredInterval, it requires summary statistics of training set and a calibration set as inputs. Specifically, we leverage [PUMAS software](https://github.com/qlu-lab/PUMAS) to mimic the original cross-validation procedure by partitioning the summary statistics of total training set 
 
 # Example
 Example codes for fitting PredInterval using toy example to construct 95% confidence interval for PGS-based phenotypic prediction (number of folds=5 for the cross-validation procedure):
