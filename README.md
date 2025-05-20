@@ -12,12 +12,14 @@ There are two versions of PredInterval:
 For detailed introduction of model fitting algorithm, please refer to the paper and documentations.  
 
 # Tutorial for PredInterval
-The PredInterval fitting can be divided into three steps:
-1. Partitioning training dataset into k folds for cross-validation procedure
+The PredInterval fitting can be generally divided into three steps:
+1. Partitioning training dataset into *k* folds for cross-validation procedure
 2. Fitting PGS method of choice to compute PGSs as inputs for PredInterval
 3. Applying PredInterval to construct PGS-based phenotypic prediction intervals
 
-
+For **individual-level version of PredInterval**, it requires individual-level genotype and phenotype data of training set and can be fitted based on the following steps:
+1. For a pre-specified number of fold *k* (we recommend *k=5*), partition the training set into *k* equal-sized disjoint subsets.
+2. 
 ```r
 workdir=/your/data/directory
 pheno_train=${workdir}/pheno_train.txt
