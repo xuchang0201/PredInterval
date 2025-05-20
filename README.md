@@ -4,7 +4,7 @@
 
 PredInterval is a statistical method that quantifies polygenic score (PGS)-based phenotype prediction uncertainty through the construction of well-calibrated prediction intervals. PredInterval is non-parametric in natural and extracts information based on quantiles of phenotypic residuals through cross-validations, thus achieving well-calibrated coverage of true phenotypic values. In addition, the PredInterval framework is general, takes either individual-level data or summary statistics as input, and can be paired with any PGS method or pre-computed SNP effect sizes obtained from publicly available resources.
     
-# How to use PredInterval
+# How to Use PredInterval
 There are two versions of PredInterval:
 1. **Individual-level version of PredInterval:** construct phenotypic prediction intervals using individual-level genotype and phenotype from the training sample.
 2. **Summary statistics version of PredInterval:** construct phenotypic prediction intervals using summary statistics as training data and a small calibration set for phenotypic residual-based calibration.
@@ -16,7 +16,7 @@ The PredInterval fitting can be generally divided into three steps:
 
 For detailed introduction of model fitting algorithm, please refer to the paper and documentations.  
 
-# Tutorial for Individual-level version of PredInterval
+# Tutorial for Individual-level Version of PredInterval
 For individual-level version of PredInterval, it requires individual-level genotype and phenotype data of training set and can be fitted based on the following steps:
 1. For a pre-specified number of fold *k* (we recommend *k*=5), partition the training set into *k* equal-sized disjoint subsets.
 2. For each subset *i* in term, fit a PGS method of choice using the data of the remaining *k*-1 subsets to obtain SNP effect size estimates
@@ -46,6 +46,7 @@ The inputs and format requirements are:
 6. **output**: file name of output
 7. **conf_level**: target confidence level (e.g., 0.95 for 95% confidence level). 
 
+# Tutorial for Summary Statistics Version of PredInterval
 
 # Example
 Example codes for fitting PredInterval using toy example to construct 95% confidence interval for PGS-based phenotypic prediction (number of folds=5 for the cross-validation procedure):
