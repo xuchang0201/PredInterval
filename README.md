@@ -26,18 +26,22 @@ For individual-level version of PredInterval, it requires individual-level genot
 
 Example command:
 ```r
-workdir=/your/data/directory
-pheno_train=${workdir}/pheno_train.txt
-PGS_train_prefix=${workdir}/train_PGS_subset
-test_fam=${workdir}/test_set.fam
-PGS_test_prefix=${workdir}/test_PGS_subset
+pheno_train=pheno_train.txt
+PGS_train_prefix=train_PGS_subset
+test_fam=test_set.fam
+PGS_test_prefix=test_PGS_subset
 cv_fold=5
-output=${workdir}/CI_output.txt
+output=CI_output.txt
 conf_level=0.95
-Rscript ${workdir}/PredInterval.R ${pheno_train} \
+Rscript PredInterval.R ${pheno_train} \
 ${PGS_train_prefix} ${test_fam} \
 ${PGS_test_prefix} ${cv_fold} ${output} ${conf_level}
 ```
+The inputs and format requirements are:
+1. pheno_train: file name for phenotypes of training set. The phenotype file of training set should only include two columns, with first column being sample id and the second column being the phenotypic value.
+2. PGS_train_prefix: prefix for the  
+
+
 # Example
 Example codes for fitting PredInterval using toy example to construct 95% confidence interval for PGS-based phenotypic prediction (number of folds=5 for the cross-validation procedure):
 1. Fitting individual-level version of PredInterval (toy example data located in the [Individual Level](https://github.com/xuchang0201/PredInterval/tree/main/Toy%20Example/Individual_Level)
