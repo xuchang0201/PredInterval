@@ -60,7 +60,8 @@ The outputs from the above code are five subsampled summary statistics: ${trait}
 2. For each subsampled summary statistics in turn, fit a PGS method of choice using this data to obtain SNP effect size estimates. 
 
 3. Apply the SNP effect size estimates from step 2 to compute PGSs for calibration and test set using the **score** function in PLINK
-4. 
+4. Repeat step 2 and 3 for all *k* subsampled summary statistics, and obtain *k* PGSs for the calibration set (e.g., cali_PGS_subset_1.profile, ..., cali_PGS_subset_k.profile) and *k* PGSs for the test set (e.g., test_PGS_subset_1.profile, ..., test_PGS_subset_k.profile)
+5. Fit PredInterval to construct phenotypic prediction intervals with the pre-specified confidence level (e.g., 95%)
 
 # Example
 Example codes for fitting PredInterval using toy example to construct 95% confidence interval for PGS-based phenotypic prediction (number of folds=5 for the cross-validation procedure):
