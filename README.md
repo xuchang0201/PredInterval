@@ -52,12 +52,15 @@ For summary statistics version of PredInterval, it requires summary statistics o
 The summary statistics version of PredInterval can be fitted as follows:
 1. Apply PUMAS to obtain *k* subsampled GWAS summary statistics. The example code for partitioning the summary statistics of training set into 5 subsampled summary statistics with 0.8/0.2 ratio is:
 ```r
-Rscript /net/sandbox/home/xuchang/PUMAS/code/PUMAS.subsampling.R --k 5 --partitions 0.8,0.2 --trait_name ${trait} \
+Rscript PUMAS.subsampling.R --k 5 --partitions 0.8,0.2 --trait_name ${trait} \
 --gwas_path /your/gwas/path/ --ld_path /your/LD/path --output_path /your/output/path/
 ```
 The outputs from the above code are five subsampled summary statistics: ${trait}.gwas.ite1.txt, ${trait}.gwas.ite2.txt, ..., ${trait}.gwas.ite5.txt.
+
 2. For each subsampled summary statistics in turn, fit a PGS method of choice using this data to obtain SNP effect size estimates. 
-3. 
+
+3. Apply the SNP effect size estimates from step 2 to compute PGSs for calibration and test set using the **score** function in PLINK
+4. 
 
 # Example
 Example codes for fitting PredInterval using toy example to construct 95% confidence interval for PGS-based phenotypic prediction (number of folds=5 for the cross-validation procedure):
