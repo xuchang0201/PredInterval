@@ -38,12 +38,13 @@ ${PGS_train_prefix} ${test_fam} \
 ${PGS_test_prefix} ${cv_fold} ${output} ${conf_level}
 ```
 The inputs and format requirements are:
-1. pheno_train: file name for phenotypes of training set. The phenotype file of training set should only include two columns, with first column being sample id and the second column being the phenotypic value.
-2. PGS_train_prefix: prefix for the PGSs of *k* subsets of training set from PLINK. Note that the file names must be named as ${PGS_train_prefix}_subset_1.profile, ${PGS_train_prefix}_subset_2.profile, ..., ${PGS_train_prefix}_subset_k.profile.
-3. test_fam: fam file of genotype data for the test set. Note that the genotype data of test set should be in PLINK binary format (with bed, bim, and fam files)
-4. PGS_test_prefix: prefix for the *k* PGSs of test set from PLINK. Similarly, the file names must be named as ${PGS_test_prefix}_subset_1.profile, ${PGS_test_prefix}_subset_2.profile, ..., ${PGS_test_prefix}_subset_k.profile.
-5. cv_fold: number of folds for cross-validation
-6. 
+1. **pheno_train**: file name for phenotypes of training set. The phenotype file of training set should only include two columns, with first column being sample id and the second column being the phenotypic value.
+2. **PGS_train_prefix**: prefix for the PGSs of *k* subsets of training set from PLINK. Note that the file names must be named as ${PGS_train_prefix}_subset_1.profile, ${PGS_train_prefix}_subset_2.profile, ..., ${PGS_train_prefix}_subset_k.profile.
+3. **test_fam**: fam file of genotype data for the test set. Note that the genotype data of test set should be in PLINK binary format (with bed, bim, and fam files)
+4. **PGS_test_prefix**: prefix for the *k* PGSs of test set from PLINK. Similarly, the file names must be named as ${PGS_test_prefix}_subset_1.profile, ${PGS_test_prefix}_subset_2.profile, ..., ${PGS_test_prefix}_subset_k.profile.
+5. **cv_fold**: number of folds for cross-validation
+6. **output**: file name of output
+7. **conf_level**: target confidence level (e.g., 0.95 for 95% confidence level). 
 
 
 # Example
