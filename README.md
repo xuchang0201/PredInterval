@@ -9,15 +9,15 @@ There are two versions of PredInterval:
 1. **Individual-level version of PredInterval:** construct phenotypic prediction intervals using individual-level genotype and phenotype from the training sample.
 2. **Summary statistics version of PredInterval:** construct phenotypic prediction intervals using summary statistics as training data and a small calibration set for phenotypic residual-based calibration.
 
-For detailed introduction of model fitting algorithm, please refer to the paper and documentations.  
-
-# Tutorial for PredInterval
 The PredInterval fitting can be generally divided into three steps:
 1. Partitioning training dataset into *k* folds for cross-validation procedure
 2. Fitting a PGS method of choice to compute PGSs as inputs for PredInterval
 3. Applying PredInterval to construct PGS-based phenotypic prediction intervals
 
-For **individual-level version of PredInterval**, it requires individual-level genotype and phenotype data of training set and can be fitted based on the following steps:
+For detailed introduction of model fitting algorithm, please refer to the paper and documentations.  
+
+# Tutorial for Individual-level version of PredInterval
+For individual-level version of PredInterval, it requires individual-level genotype and phenotype data of training set and can be fitted based on the following steps:
 1. For a pre-specified number of fold *k* (we recommend *k*=5), partition the training set into *k* equal-sized disjoint subsets.
 2. For each subset *i* in term, fit a PGS method of choice using the data of the remaining *k*-1 subsets to obtain SNP effect size estimates
 3. Apply the SNP effect size estimates from step 2 to compute PGSs for subset *i* and test set using the **score** function in PLINK
