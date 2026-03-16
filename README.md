@@ -6,8 +6,9 @@ PredInterval is a statistical method that quantifies polygenic score (PGS)-based
     
 # How to Use PredInterval
 There are two versions of PredInterval:
-1. **Individual-level version of PredInterval:** construct phenotypic prediction intervals using individual-level genotype and phenotype from the training sample.
-2. **Summary statistics version of PredInterval:** construct phenotypic prediction intervals using summary statistics as training data and a small calibration set for phenotypic residual-based calibration.
+1. **Non-covariate version of PredInterval:** construct phenotypic prediction intervals using individual-level genotype and phenotype data.
+2. **Covariate version of PredInterval:** construct phenotypic prediction intervals using individual-level genotype, phenotype, and covaraites to achieve contextual calibration.
+3. **Summary statistics version of PredInterval:** construct phenotypic prediction intervals using summary statistics as training data and a small calibration set for phenotypic residual-based calibration.
 
 The PredInterval fitting can be generally divided into three steps:
 1. Partitioning training dataset into *k* folds for cross-validation procedure
@@ -16,8 +17,8 @@ The PredInterval fitting can be generally divided into three steps:
 
 For detailed introduction of model fitting algorithm, please refer to the paper and documentations.  
 
-# Tutorial for Individual-Level Version of PredInterval
-For individual-level version of PredInterval, it requires individual-level genotype and phenotype data of training set and can be fitted based on the following steps:
+# Tutorial for Non-covariate Version of PredInterval
+For individual-level non-covariate version of PredInterval, it requires individual-level genotype and phenotype data of training set and can be fitted based on the following steps:
 1. For a pre-specified number of fold *k* (we recommend *k*=5), partition the training set into *k* equal-sized disjoint subsets.
 2. For each subset *i* in term, fit a PGS method of choice using the data of the remaining *k*-1 subsets to obtain SNP effect size estimates.
 3. Apply the SNP effect size estimates from step 2 to compute PGSs for subset *i* and test set using the **score** function in PLINK.
@@ -45,6 +46,82 @@ The inputs and format requirements are:
 5. **cv_fold**: number of folds for cross-validation
 6. **output**: file name of output
 7. **conf_level**: target confidence level (e.g., 0.95 for 95% confidence level). 
+
+# Tutorial for Covariate Version of PredInterval for Contextual Calibration
+
+## Background: Contextual Calibration and Data Normalization
+
+Contextual calibration refers to the ability of a method to produce calibrated prediction intervals within subgroups defined by covariates (e.g., sex, age, ancestry). Miscalibration within such subgroups can arise when covariate effects are not properly accounted for during data normalization.
+
+In many GWAS settings, standard phenotype normalization procedures that control for covariate effects are sufficient to achieve contextual calibration. The key requirement is that normalization is performed either jointly on the training and test data, or — if performed separately — that the same model fitted on the training data is applied to the test data rather than fitting a new model independently on each dataset.
+
+In most cases, removing covariate effects on the phenotypic mean via linear regression is sufficient. In rarer situations where a covariate also affects the phenotypic variance (e.g., higher variance in one sex than the other), additional normalization steps may be needed, such as within-stratum quantile normalization or a heteroscedastic regression model to obtain variance-standardized residuals before model fitting.
+
+When proper normalization has not been performed, covariates can be incorporated directly into the PredInterval fitting step using the covariate version described below.
+
+---
+
+## Covariate Version of PredInterval
+
+The covariate version of PredInterval extends the non-covariate version by incorporating covariates within each cross-validation fold. This ensures that covariate effects are accounted for even when the data normalization failed to account for covaraite effects.
+
+Steps 1–4 for fitting the covariate version are identical to the non-covariate version above. The additional requirement is the preparation of a covariate file for both the training and test sets, as described below.
+
+### Step 5: Prepare covariate files
+
+In addition to the inputs required for the non-covariate version, two covariate files must be supplied:
+
+- **Training covariate file**: `${PGS_train_prefix}.cvt.txt`
+- **Test covariate file**: `${PGS_test_prefix}.cvt.txt`
+
+These files must be placed in the same folder as the corresponding PGS prefix files. PredInterval will automatically detect them and activate the covariate version. If these files are absent, PredInterval falls back to the standard non-covariate behavior.
+
+#### Format of `.cvt.txt` files
+
+Each file should be a space-delimited plain text file with a header row. The first column must be the sample ID, followed by one column per covariate. The covariate columns must be identical between the training and test files. 
+
+Example `.cvt.txt` file (with sex, age, age squared, genotyping array, and 20 principal components):
+
+```
+id sex age age2 array PC1 PC2 PC3 PC4 PC5 PC6 PC7 PC8 PC9 PC10 PC11 PC12 PC13 PC14 PC15 PC16 PC17 PC18 PC19 PC20
+1000001 1 52 2704 0 0.0312 -0.0021 0.0087 0.0143 -0.0056 0.0201 -0.0034 0.0078 0.0112 -0.0045 0.0067 0.0023 -0.0089 0.0134 0.0056 -0.0012 0.0098 0.0045 -0.0067 0.0123
+1000002 0 47 2209 1 0.0289 0.0034 -0.0061 0.0098 0.0073 -0.0145 0.0056 0.0034 -0.0089 0.0112 0.0045 0.0078 0.0023 -0.0056 0.0134 0.0067 -0.0023 0.0089 0.0045 -0.0078
+1000003 1 61 3721 0 -0.0103 0.0112 0.0045 -0.0067 0.0156 0.0089 0.0023 -0.0112 0.0067 0.0034 -0.0089 0.0156 0.0045 0.0078 -0.0023 0.0112 0.0034 -0.0056 0.0089 0.0067
+```
+
+### Step 6: Fit the covariate version of PredInterval
+
+Once the `.cvt.txt` files are in place, the command is identical to the non-covariate version — no additional arguments are needed:
+
+```bash
+pheno_train=pheno_train.txt
+PGS_train_prefix=train_PGS_subset
+test_fam=test_set.fam
+PGS_test_prefix=test_PGS_subset
+cv_fold=5
+output=CI_output.txt
+conf_level=0.95
+
+Rscript PredInterval.R ${pheno_train} \
+  ${PGS_train_prefix} ${test_fam} \
+  ${PGS_test_prefix} ${cv_fold} ${output} ${conf_level}
+```
+
+PredInterval will automatically detect the `.cvt.txt` files and activate the covariate fitting procedure. Progress updates will be printed to the console during model fitting and interval computation.
+
+### Output
+
+The output format is identical to the non-covariate version, with one additional column:
+
+| Column | Description |
+|---|---|
+| `id` | Sample ID |
+| `lower_bound` | Lower bound of the prediction interval |
+| `upper_bound` | Upper bound of the prediction interval |
+| `predicted_mean` | Predicted phenotypic value averaged across *k* fold-specific mean models |
+
+Additionally, the fitted models for each fold are saved to disk as `.rds` files alongside the output file (e.g., `CI_output.txt.mean_model_fold_1.rds`, `CI_output.txt.var_model_fold_1.rds`) for reuse on separate test datasets without refitting.
+
 
 # Tutorial for Summary Statistics Version of PredInterval
 For summary statistics version of PredInterval, it requires summary statistics of training set and a calibration set as inputs. Specifically, we leverage [PUMAS software](https://github.com/qlu-lab/PUMAS) to mimic the original cross-validation procedure by partitioning the summary statistics of training set into *k* subsampled summary statistics. Details of underlying model and fitting algorithm for PUMAS can be found at PUMAS paper and documentations. 
