@@ -51,13 +51,13 @@ The inputs and format requirements are:
 
 ## Background: Contextual Calibration and Data Normalization
 
-Contextual calibration refers to the ability of a method to produce calibrated prediction intervals within subgroups defined by covariates (e.g., sex, age, ancestry). Miscalibration within such subgroups can arise when covariate effects are not properly accounted for during data normalization.
+Contextual calibration refers to the ability of a method to produce calibrated prediction intervals within subgroups defined by covariates (e.g., sex, age, ancestry). Miscalibration within such subgroups can arise when covariate effects are not properly accounted for during data normalization prior.
 
-In many GWAS settings, standard phenotype normalization procedures that control for covariate effects are sufficient to achieve contextual calibration. The key requirement is that normalization is performed either jointly on the training and test data, or — if performed separately — that the same model fitted on the training data is applied to the test data rather than fitting a new model independently on each dataset.
+In many GWAS settings, standard phenotype normalization procedures that account for covariate effects are sufficient to achieve proper calibration. In most cases, removing covariate effects on the phenotypic mean via linear regression is adequate. For example, in typical UK Biobank analyses, effects of sex, age, and age² are adjusted for directly through regression before data analysis.
 
-In most cases, removing covariate effects on the phenotypic mean via linear regression is sufficient. In rarer situations where a covariate also affects the phenotypic variance (e.g., higher variance in one sex than the other), additional normalization steps may be needed, such as within-stratum quantile normalization or a heteroscedastic regression model to obtain variance-standardized residuals before model fitting.
+In less common situations where covariates also influence phenotypic variance (e.g., differing variance between sexes), additional normalization steps may be required. These may include within-stratum quantile normalization or box-cox transformation or the use of heteroscedastic regression models to obtain variance-standardized residuals prior to model fitting.
 
-When proper normalization has not been performed, covariates can be incorporated directly into the PredInterval fitting step using the covariate version described below.
+When such normalization has not been performed, covariates can instead be incorporated directly into the PredInterval fitting step using the covariate-adjusted version described below. In such cases, if covariate effects further differ between the training and test datasets (e.g. if training and test datasets come from two different populations), it is important to use a subset of the test data, rather than the training data, as the hold-out portion during model fitting.
 
 ---
 
