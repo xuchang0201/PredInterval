@@ -122,6 +122,69 @@ The output format is identical to the non-covariate version, with one additional
 
 Additionally, the fitted models for each fold are saved to disk as `.rds` files alongside the output file (e.g., `CI_output.txt.mean_model_fold_1.rds`, `CI_output.txt.var_model_fold_1.rds`) for reuse on separate test datasets without refitting.
 
+## Held-Out Calibration for Shifted Covariate Effects
+
+In the absence of proper data normalization, when the training and test datasets come from different populations — or when covariate effects differ between training and test (e.g., due to different study designs or recruitment criteria) — the nonconformity scores derived from the training set may no longer be representative of the test population. In this setting, using training-based nonconformity scores can lead to miscalibrated prediction intervals even when covariates are included.
+
+To address this, PredInterval supports an optional held-out calibration mode in which a user-supplied subset of the test individuals with known phenotypes is used as the calibration set. The two-stage heteroscedastic model is fitted on this held-out set, and the resulting nonconformity scores are used to construct prediction intervals for the remaining test individuals. Since the calibration set is drawn from the same population as the test set, the coverage guarantee is preserved.
+
+### When to use this mode
+
+Use this mode when data are not properly normalized and when:
+- The training and test data come from different cohorts or populations
+- Covariate distributions or covariate-phenotype relationships differ substantially between training and test
+- You have access to phenotype data for a subset of the test individuals (e.g., a pilot cohort or validation subset)
+
+### Step 5: Prepare covariate files
+
+Prepare the `.cvt.txt` files exactly as described above. Both training and test covariate files are required.
+
+### Step 6: Prepare the held-out phenotype file
+
+Create a phenotype file for the subset of test individuals whose phenotypes are known. This file must have the same two-column format as the training phenotype file (sample ID in the first column, phenotypic value in the second column):
+
+```
+id Y
+1000101 23.4
+1000102 31.7
+1000103 19.2
+```
+
+We recommend including at least 5,000 individuals in this held-out set to ensure stable quantile estimation. These individuals will receive `NA` in the output since their phenotypes are already known; prediction intervals will be computed for all remaining test individuals.
+
+### Step 7: Fit PredInterval with held-out calibration
+
+Supply the held-out phenotype file as the optional eighth argument:
+
+```bash
+pheno_train=pheno_train.txt
+PGS_train_prefix=train_PGS_subset
+test_fam=test_set.fam
+PGS_test_prefix=test_PGS_subset
+cv_fold=5
+output=CI_output.txt
+conf_level=0.95
+holdout_pheno=holdout_test_pheno.txt
+
+Rscript PredInterval.R ${pheno_train} \
+  ${PGS_train_prefix} ${test_fam} \
+  ${PGS_test_prefix} ${cv_fold} ${output} ${conf_level} \
+  ${holdout_pheno}
+```
+
+PredInterval will automatically identify the held-out individuals by matching the IDs in `${holdout_pheno}` against the test fam file, fit the two-stage model separately for each of the *k* folds using the fold-specific PGS scores for the held-out set, pool the nonconformity scores across all *k* folds, and construct prediction intervals for the remaining test individuals.
+
+### Output
+
+The output file contains all individuals listed in the test fam file. Held-out calibration individuals receive `NA` for all interval columns; all remaining test individuals receive their computed prediction intervals:
+
+| Column | Description |
+|---|---|
+| `id` | Sample ID |
+| `lower_bound` | Lower bound of the prediction interval (`NA` for held-out individuals) |
+| `upper_bound` | Upper bound of the prediction interval (`NA` for held-out individuals) |
+| `predicted_mean` | Predicted phenotypic value (`NA` for held-out individuals) |
+
 
 # Tutorial for Summary Statistics Version of PredInterval
 For summary statistics version of PredInterval, it requires summary statistics of training set and a calibration set as inputs. Specifically, we leverage [PUMAS software](https://github.com/qlu-lab/PUMAS) to mimic the original cross-validation procedure by partitioning the summary statistics of training set into *k* subsampled summary statistics. Details of underlying model and fitting algorithm for PUMAS can be found at PUMAS paper and documentations. 
