@@ -51,9 +51,9 @@ The inputs and format requirements are:
 
 ## Background: Contextual Calibration and Data Normalization
 
-Contextual calibration refers to the ability of a method to produce calibrated prediction intervals within subgroups defined by covariates (e.g., sex, age, ancestry). Miscalibration within such subgroups can arise when covariate effects are not properly accounted for during data normalization prior.
+Contextual calibration refers to the ability of a method to produce calibrated prediction intervals within subgroups defined by covariates (e.g., sex, age, ancestry). Miscalibration within such subgroups can arise when covariate effects are not properly accounted for during data normalization prior to PGS model fitting.
 
-In many GWAS settings, standard phenotype normalization procedures that account for covariate effects are sufficient to achieve proper calibration. In most cases, removing covariate effects on the phenotypic mean via linear regression is adequate. For example, in typical UK Biobank analyses, effects of sex, age, and age² are adjusted for directly through regression before data analysis.
+In many GWAS settings, standard phenotype normalization procedures that account for covariate effects are sufficient to achieve proper calibration. In most cases, removing covariate effects on the phenotypic mean via linear regression is adequate. For example, in typical UK Biobank analyses, effects of sex, age, and age² are adjusted for directly through regression before any data analysis.
 
 In less common situations where covariates also influence phenotypic variance (e.g., differing variance between sexes), additional normalization steps may be required. These may include within-stratum quantile normalization or box-cox transformation or the use of heteroscedastic regression models to obtain variance-standardized residuals prior to model fitting.
 
