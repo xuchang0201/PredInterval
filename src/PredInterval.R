@@ -28,13 +28,39 @@ alpha <- 1 - conf_level
 #   For test individuals:
 #     Predict mu_hat using fold-k mean model, average across K folds
 #     Predict sigma_hat using fold-k variance model, average across K folds
-# If files are absent, fall back to original CV+ behavior with fast pre-sort approximation:
-#   sort order of (mu_test_set +/- R_i) approximated by sort order of R_i alone,
-#   valid when between-fold SCORESUM variation is small relative to R_i variation
+# If files are absent, fall back to original CV+ behavior
+#
+# OPTIONAL: args[8] = path to phenotype file for a subset of test individuals (held-out set H)
+#   Format: two columns (id, phenotype), same as training phenotype file
+#   When supplied and cvt files are present, activates test held-out mode:
+#   For each fold k:
+#     - Fit two-stage model on H using fold-k SCORESUM + covariates
+#     - Compute nonconformity scores R_i on H using fold-k model
+#     - Predict mu_hat and sigma_hat for remaining test individuals using fold-k model
+#   Average mu_hat and sigma_hat across K folds for remaining test individuals
+#   Construct prediction intervals for remaining test individuals using pooled R_i from H
+#   H individuals receive NA in the output (their phenotypes are known)
 
 cvt_train_file     <- paste0(pgs_prefix_train, ".cvt.txt")
 cvt_test_file      <- paste0(pgs_prefix_test,  ".cvt.txt")
 use_variance_model <- file.exists(cvt_train_file) && file.exists(cvt_test_file)
+
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+# MODIFICATION: Parse optional held-out phenotype file argument
+use_test_holdout     <- FALSE
+holdout_pheno_file <- NULL
+
+if (length(args) >= 8 && nchar(args[8]) > 0 && file.exists(args[8])) {
+  holdout_pheno_file <- args[8]
+  if (!use_variance_model) {
+    warning("Held-out phenotype file supplied but no .cvt.txt files found — ignored.")
+  } else {
+    use_test_holdout <- TRUE
+    cat("Test held-out mode activated.\n")
+    cat("  Held-out phenotype file:", holdout_pheno_file, "\n")
+  }
+}
+# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 if (use_variance_model) {
   cvt_train <- data.frame(fread(cvt_train_file))
@@ -87,7 +113,7 @@ colnames(R_i_dataset) <- c("id", "subset", "R_i")
 
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 # MODIFICATION: Load test set PGS here (moved up from original position)
-# so pgs_test_set is available for sigma_hat_test prediction below
+# so pgs_test_set is available for test held-out below
 
 ### get result for test set
 test_set     <- fread(test_fam_name, header = FALSE)
@@ -105,31 +131,132 @@ for (k in 2:n_fold){
 
 
 # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-# MODIFICATION: For each fold k, use (K-1) training folds to fit a two-stage
-# variance model, then standardize R_i for held-out fold k individuals.
-#
-# Stage 1: fit Y ~ SCORESUM + covariates on (K-1) folds
-#          -> compute mu_hat_i = E[Y|SCORESUM, covariates] for held-out fold k
-#          -> compute abs residuals |Y_i - mu_hat_i| on (K-1) folds for Stage 2
-# Stage 2: fit |resid| ~ SCORESUM + covariates (Gamma GLM, log link) on (K-1) folds
-#          -> compute sigma_hat_i for held-out fold k
-# Apply:   R_i = |Y_i - mu_hat_i| / sigma_hat_i for held-out fold k individuals
-# Test:    predict mu_hat and sigma_hat using fold-k models, average across K folds
+# MODIFICATION: Test held-out mode (for covariate shift setting, where covaraite effect differs between training and test set)
+# For each fold k:
+#   1. Use fold-k SCORESUM for H individuals + covariates to fit two-stage model on H
+#   2. Compute nonconformity scores R_i on H using fold-k model
+#   3. Predict mu_hat and sigma_hat for remaining test individuals using fold-k model
+# Pool R_i across all K folds (each H individual contributes once per fold ->
+# total K * |H| nonconformity scores, one per H-individual per fold)
+# Average mu_hat and sigma_hat across K folds for remaining test individuals
+# H individuals receive NA in output
 
-if (use_variance_model) {
+if (use_test_holdout) {
   
-  # Validate: all training individuals must appear in covariate file
+  # --- Load held-out phenotype file ---
+  holdout_pheno <- data.frame(fread(holdout_pheno_file))
+  colnames(holdout_pheno)[1] <- "id"
+  colnames(holdout_pheno)[2] <- "Y"
+  holdout_pheno    <- holdout_pheno[!is.na(holdout_pheno$Y), ]
+  holdout_pheno$id <- as.character(holdout_pheno$id)
+  
+  # Identify H: intersection of supplied IDs with test set and covariate file
+  holdout_ids <- intersect(holdout_pheno$id, as.character(test_id_list))
+  holdout_ids <- intersect(holdout_ids, as.character(cvt_test$id))
+  
+  if (length(holdout_ids) == 0) {
+    stop("No held-out individuals found in test set with both phenotype and covariate data.")
+  }
+  
+  cat("Test held-out set H: n =", length(holdout_ids), "\n")
+  
+  # Remaining test individuals (get prediction intervals)
+  predict_ids <- setdiff(as.character(test_id_list), holdout_ids)
+  cat("Remaining prediction set: n =", length(predict_ids), "\n")
+  
+  # H covariates and phenotypes
+  holdout_cvt <- cvt_test[match(holdout_ids, as.character(cvt_test$id)), ]
+  holdout_Y   <- holdout_pheno$Y[match(holdout_ids, holdout_pheno$id)]
+  
+  # Storage: pool R_i across all K folds for H
+  # Each fold contributes |H| nonconformity scores -> total K*|H| scores
+  R_i_pool <- numeric(0)
+  
+  # Storage: mu_hat and sigma_hat for remaining test individuals, one per fold
+  mu_hat_predict_mat    <- matrix(NA, nrow = length(predict_ids), ncol = n_fold)
+  sigma_hat_predict_mat <- matrix(NA, nrow = length(predict_ids), ncol = n_fold)
+  
+  mean_formula_h <- as.formula(paste("Y ~ SCORESUM +",         paste(cvt_colnames, collapse = " + ")))
+  var_formula_h  <- as.formula(paste("abs_resid ~ SCORESUM +", paste(cvt_colnames, collapse = " + ")))
+  
+  for (k in 1:n_fold) {
+    
+    # Build H data frame using fold-k SCORESUM
+    holdout_scoresum_k <- pgs_test_set$SCORESUM[
+      match(holdout_ids, as.character(pgs_test_set$IID[pgs_test_set$subset == k]))]
+    
+    holdout_df_k <- data.frame(
+      id       = holdout_ids,
+      Y        = holdout_Y,
+      SCORESUM = holdout_scoresum_k
+    )
+    holdout_df_k <- merge(holdout_df_k, holdout_cvt, by = "id", all.x = TRUE)
+    
+    # Stage 1: fit mean model on H using fold-k SCORESUM
+    mean_model_h_k        <- lm(mean_formula_h, data = holdout_df_k)
+    holdout_df_k$abs_resid <- abs(residuals(mean_model_h_k))
+    
+    # Stage 2: fit variance model on H using Stage 1 residuals
+    var_model_h_k <- glm(var_formula_h, data = holdout_df_k, family = Gamma(link = "log"))
+    
+    # Compute nonconformity scores on H for fold k
+    sigma_hat_h_k <- predict(var_model_h_k, newdata = holdout_df_k, type = "response")
+    R_i_k         <- holdout_df_k$abs_resid / sigma_hat_h_k
+    
+    # Pool R_i across folds
+    R_i_pool <- c(R_i_pool, R_i_k)
+    
+    # Predict mu_hat and sigma_hat for remaining test individuals using fold-k model
+    cvt_predict_k          <- cvt_test[match(predict_ids, as.character(cvt_test$id)), ]
+    cvt_predict_k$SCORESUM <- pgs_test_set$SCORESUM[
+      match(predict_ids, as.character(pgs_test_set$IID[pgs_test_set$subset == k]))]
+    
+    mu_hat_predict_mat[, k]    <- predict(mean_model_h_k, newdata = cvt_predict_k)
+    sigma_hat_predict_mat[, k] <- predict(var_model_h_k,  newdata = cvt_predict_k,
+                                          type = "response")
+    
+    cat("Fold", k, "| H n =", length(holdout_ids),
+        "| R_i pool size so far:", length(R_i_pool), "\n")
+    
+    # Save fold-k models to disk
+#    saveRDS(mean_model_h_k, file = paste0(output_file_name, ".holdout_mean_model_fold_", k, ".rds"))
+#    saveRDS(var_model_h_k,  file = paste0(output_file_name, ".holdout_var_model_fold_",  k, ".rds"))
+  }
+  
+  # Average mu_hat and sigma_hat across K folds for remaining test individuals
+  mu_hat_test    <- setNames(rowMeans(mu_hat_predict_mat),    predict_ids)
+  sigma_hat_test <- setNames(rowMeans(sigma_hat_predict_mat), predict_ids)
+  
+  cat("Total pooled nonconformity scores from H:", length(R_i_pool), "\n")
+  
+  # Replace R_i_dataset with pooled H residuals
+  # subset column set to 1 for all (covariate branch does not use fold structure of R_i)
+  R_i_dataset <- data.frame(id = rep(holdout_ids, n_fold),
+                            subset = rep(1:n_fold, each = length(holdout_ids)),
+                            R_i    = R_i_pool)
+  
+  # Update test_id_list to prediction set only
+  test_id_list <- predict_ids
+  
+  cat("Test held-out computation complete.\n")
+}
+# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+# MODIFICATION: Standard training-fold-based variance modeling
+# Only runs when use_variance_model=TRUE and use_test_holdout=FALSE
+
+if (use_variance_model && !use_test_holdout) {
+  
   if (!all(R_i_dataset$id %in% cvt_train$id)) {
     stop("Some training individuals are missing from the train covariate file.")
   }
   
-  # Validate: all test individuals must appear in test covariate file
   if (!all(test_id_list %in% cvt_test$id)) {
     stop("Some test individuals are missing from the test covariate file.")
   }
   
-  # Prepare individual-level training data (one row per individual)
-  # Use deduplicated mu_training to avoid duplicate rows per individual
   mu_training_uniq <- mu_training[!duplicated(mu_training$IID), ]
   indiv_df <- data.frame(
     id       = mu_training_uniq$IID,
@@ -139,55 +266,44 @@ if (use_variance_model) {
   )
   indiv_df <- merge(indiv_df, cvt_train, by = "id", all.x = TRUE)
   
-  # Storage for fold-specific models, per-individual sigma_hat and Stage 1 residuals
   var_models      <- vector("list", n_fold)
   mean_models     <- vector("list", n_fold)
-  sigma_hat_train <- numeric(nrow(indiv_df))  # one value per individual
-  resid_stage1    <- numeric(nrow(indiv_df))  # |Y_i - mu_hat_i| from Stage 1 mean model
+  sigma_hat_train <- numeric(nrow(indiv_df))
+  resid_stage1    <- numeric(nrow(indiv_df))
   
   mean_formula <- as.formula(paste("Y ~ SCORESUM +",         paste(cvt_colnames, collapse = " + ")))
   var_formula  <- as.formula(paste("abs_resid ~ SCORESUM +", paste(cvt_colnames, collapse = " + ")))
   
   for (k in 1:n_fold) {
     
-    # (K-1) training folds for fold k
     train_idx <- which(indiv_df$fold != k)
     held_idx  <- which(indiv_df$fold == k)
     train_k   <- indiv_df[train_idx, ]
     held_k    <- indiv_df[held_idx,  ]
     
-    # Stage 1: fit mean model on (K-1) folds, obtain training absolute residuals
     mean_model_k      <- lm(mean_formula, data = train_k)
     train_k$abs_resid <- abs(residuals(mean_model_k))
     
-    # Stage 2: fit variance model on (K-1) folds using Stage 1 absolute residuals
     var_model_k      <- glm(var_formula, data = train_k, family = Gamma(link = "log"))
     mean_models[[k]] <- mean_model_k
     var_models[[k]]  <- var_model_k
     
-    # Compute held-out fold k nonconformity scores using Stage 1 fitted values
-    # mu_hat_i = E[Y|SCORESUM, covariates]; neither model saw fold k during fitting
     mu_hat_held            <- predict(mean_model_k, newdata = held_k)
     resid_stage1[held_idx] <- abs(held_k$Y - mu_hat_held)
     
-    # Compute sigma_hat for held-out fold k using Stage 2 variance model
     sigma_hat_held            <- predict(var_model_k, newdata = held_k, type = "response")
     sigma_hat_train[held_idx] <- sigma_hat_held
     
     cat("Fold", k, "data fitted on", length(train_idx), "individuals, with",
         length(held_idx), "individuals withheld.\n")
     
-    # Save fold-k mean and variance models to disk for reuse on separate test data
-    saveRDS(mean_model_k, file = paste0(output_file_name, ".mean_model_fold_", k, ".rds"))
-    saveRDS(var_model_k,  file = paste0(output_file_name, ".var_model_fold_",  k, ".rds"))
+#    saveRDS(mean_model_k, file = paste0(output_file_name, ".mean_model_fold_", k, ".rds"))
+#    saveRDS(var_model_k,  file = paste0(output_file_name, ".var_model_fold_",  k, ".rds"))
   }
   
-  # Replace R_i_dataset$R_i with Stage 1 fitted residuals standardized by sigma_hat
-  # (original R_i used raw SCORESUM residuals; now uses mu_hat from mean model)
   R_i_dataset$R_i <- resid_stage1[match(R_i_dataset$id, indiv_df$id)] /
     sigma_hat_train[match(R_i_dataset$id, indiv_df$id)]
   
-  # Predict mu_hat and sigma_hat for test individuals across K fold-specific models
   cvt_test_matched   <- cvt_test[match(test_id_list, cvt_test$id), ]
   mu_hat_test_mat    <- matrix(NA, nrow = length(test_id_list), ncol = n_fold)
   sigma_hat_test_mat <- matrix(NA, nrow = length(test_id_list), ncol = n_fold)
@@ -200,12 +316,11 @@ if (use_variance_model) {
     sigma_hat_test_mat[, k] <- predict(var_models[[k]],  newdata = cvt_test_k, type = "response")
   }
   
-  mu_hat_test    <- rowMeans(mu_hat_test_mat)
-  mu_hat_test    <- setNames(mu_hat_test,    as.character(test_id_list))
-  sigma_hat_test <- rowMeans(sigma_hat_test_mat)
-  sigma_hat_test <- setNames(sigma_hat_test, as.character(test_id_list))
+  mu_hat_test    <- setNames(rowMeans(mu_hat_test_mat),    as.character(test_id_list))
+  sigma_hat_test <- setNames(rowMeans(sigma_hat_test_mat), as.character(test_id_list))
   
-  cat("Variance model: mu_hat and sigma_hat computed for", length(sigma_hat_test), "test individuals.\n")
+  cat("Variance model: mu_hat and sigma_hat computed for", length(sigma_hat_test),
+      "test individuals.\n")
 }
 # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -221,26 +336,13 @@ predicted_mean <- numeric(length(test_id_list))
 n_test         <- length(test_id_list)
 progress_steps <- floor(seq(1, n_test, length.out = 21))  # report every ~5%
 
-# Pre-index pgs_test_set by IID and subset for fast O(1) lookup
 pgs_test_split <- lapply(1:n_fold, function(m) {
   sub_m <- pgs_test_set[pgs_test_set$subset == m, ]
   setNames(sub_m$SCORESUM, as.character(sub_m$IID))
 })
 
-# Pre-compute fold sizes for R_i_dataset
 fold_sizes <- sapply(1:n_fold, function(m) sum(R_i_dataset$subset == m))
 
-# Pre-sort R_i_vec once outside loop.
-# Covariate branch:    exact — mu_hat is scalar per individual, sort order of
-#                      (mu +/- sigma*R_i) identical to sort order of R_i
-# No-covariate branch: approximate — mu_test_set varies by fold but variation
-#                      is small relative to R_i variation across n_train individuals;
-#                      sort order of (mu_test_set +/- R_i) approximated by R_i order.
-#                      fold_at_ub/fold_at_lb give the fold of the quantile-index
-#                      individual, used to look up the correct SCORESUM.
-# Both bounds use ub_idx because:
-#   upper bound: q_{1-alpha}(mu + R_i) -> largest R_i values
-#   lower bound: q_{alpha}(mu - R_i)   -> largest R_i values (smallest mu - R_i)
 R_i_vec        <- R_i_dataset$R_i
 n_train        <- length(R_i_vec)
 R_i_order_asc  <- order(R_i_vec)
@@ -251,14 +353,7 @@ if (use_variance_model) {
   sigma_vec <- setNames(sigma_hat_test[as.character(test_id_list)],
                         as.character(test_id_list))
 } else {
-  # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-  # Pre-compute fold membership at quantile index for no-covariate branch:
-  # fold_at_ub: fold of the training individual ranked at ub_idx by R_i (for upper bound)
-  # fold_at_lb: fold of the training individual ranked at ub_idx by R_i (for lower bound)
-  # Both use ub_idx since both bounds correspond to the largest R_i values
   fold_at_ub <- R_i_dataset$subset[R_i_order_asc[ub_idx]]
-  fold_at_lb <- R_i_dataset$subset[R_i_order_asc[ub_idx]]  # same index, same fold
-  # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 }
 # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -278,19 +373,14 @@ for (j in 1:n_test) {
   
   if (use_variance_model) {
     
-    # Exact: mu_hat scalar per individual, sigma scalar per individual
-    # upper = mu + sigma * q_{1-alpha}(R_i)
-    # lower = mu - sigma * q_{1-alpha}(R_i)
-    mu_j              <- mean(mu_hat_test_mat[j, ])
-    sigma_j           <- sigma_vec[id_j]
+    mu_j              <- mu_hat_test[id_j]
+    sigma_j           <- sigma_hat_test[id_j]
     upper_bound[j]    <- mu_j + sigma_j * R_i_sorted_asc[ub_idx]
     lower_bound[j]    <- mu_j - sigma_j * R_i_sorted_asc[ub_idx]
     predicted_mean[j] <- mu_j
     
   } else {
     
-    # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    # use the exact original CV+ for no-covariate branch:
     mu_test_set <- unlist(lapply(1:n_fold, function(m) {
       rep(pgs_test_split[[m]][id_j], fold_sizes[m])
     }))
@@ -304,11 +394,37 @@ for (j in 1:n_test) {
     lower_bound[j]    <- ordered_mu_minus_R_i[ceiling(alpha * (n_train + 1))]
     upper_bound[j]    <- ordered_mu_plus_R_i[ceiling((1 - alpha) * (n_train + 1))]
     predicted_mean[j] <- mean(sapply(1:n_fold, function(m) pgs_test_split[[m]][id_j]))
-    # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
   }
 }
 cat("\n  Done.\n")
 
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+# MODIFICATION: Output includes all test individuals.
+# H individuals (test held-out set) receive NA for all interval columns.
+# Remaining test individuals receive their computed intervals as usual.
+
+all_test_ids <- as.character(fread(test_fam_name, header = FALSE)$V2)
+
+output_data <- data.frame(
+  id             = all_test_ids,
+  lower_bound    = NA_real_,
+  upper_bound    = NA_real_,
+  predicted_mean = NA_real_
+)
+
+# Fill in computed intervals for prediction set individuals
+pred_idx <- match(as.character(test_id_list), output_data$id)
+output_data$lower_bound[pred_idx]    <- lower_bound
+output_data$upper_bound[pred_idx]    <- upper_bound
+output_data$predicted_mean[pred_idx] <- predicted_mean
+# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
 ### output confidence interval for all individuals in the test set
-output_data <- data.frame(id = test_id_list, lower_bound, upper_bound, predicted_mean)
-write.table(output_data, output_file_name, row.names = FALSE, col.names = TRUE, quote = FALSE, sep = " ")
+write.table(output_data, output_file_name,
+            row.names = FALSE, col.names = TRUE, quote = FALSE, sep = " ")
+
+cat("Output written to", output_file_name, "\n")
+cat("  Prediction intervals computed for:", length(test_id_list), "individuals\n")
+if (use_test_holdout) {
+  cat("  NA (test held-out set):", length(holdout_ids), "individuals\n")
+}
