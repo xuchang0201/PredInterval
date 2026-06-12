@@ -51,13 +51,15 @@ The inputs and format requirements are:
 
 ## Background: Contextual Calibration and Data Normalization
 
-Contextual calibration refers to the ability of a method to produce calibrated prediction intervals within subgroups defined by covariates (e.g., sex, age, ancestry). Miscalibration within such subgroups can arise when covariate effects are not properly accounted for during data normalization prior to PGS model fitting.
+Contextual calibration refers to the ability of a method to produce calibrated prediction intervals within subgroups defined by covariates (e.g., sex, age, ancestry). Miscalibration within such subgroups can arise when covariate effects on residual variance are not properly accounted for during data normalization prior to PGS model fitting.
 
 In many GWAS settings, standard phenotype normalization procedures that account for covariate effects are sufficient to achieve proper calibration. In most cases, removing covariate effects on the phenotypic mean via linear regression is adequate. For example, in typical UK Biobank analyses, effects of sex, age, and age² are adjusted for directly through regression before any data analysis.
 
-In less common situations where covariates also influence phenotypic variance (e.g., differing variance between sexes), additional normalization steps may be required. These may include within-stratum quantile normalization or box-cox transformation or the use of heteroscedastic regression models to obtain variance-standardized residuals prior to model fitting.
+In less common situations where covariates also influence phenotypic variance (e.g., differing variance between sexes), additional normalization steps may be required. Standard normalization include within-stratum quantile normalization, box-cox transformation, heteroscedastic regression models, or, simply, two-stage linear regression (one stage on the mean and the second stage on the transformed residuals) to obtain variance-standardized residuals prior to model fitting. 
 
-When such normalization has not been performed, covariates can instead be incorporated directly into the PredInterval fitting step using the covariate-adjusted version described below. In such cases, if covariate effects further differ between the training and test datasets (e.g. if training and test datasets come from two different populations), it is important to use a subset of the test data, rather than the training data, as the hold-out portion during model fitting.
+When such phenotype normalization has not been performed, covariates can instead be incorporated directly into the PredInterval fitting step using the covariate-adjusted version described below. The covariate version of PredInterval adjusts for covariate effects through a two-stage linear regression, one stage on the mean and the second stage on the transformed residuals. Additionally, if covariate effects further differ between the training and test datasets (e.g. if training and test datasets come from two different populations), it is important to use a subset of the test data, rather than the training data, as the hold-out portion during model fitting.
+
+Details about contextual calibration and proper ways to address it are provided in the 2026 paper listed in the citations section below.
 
 ---
 
@@ -252,6 +254,8 @@ To further support reproducibility, we have deposited the summary statistics for
 # Citations
 
 Chang Xu, Santhi K. Ganesh, and Xiang Zhou (2024). Statistical construction of calibrated prediction intervals for polygenic score based phenotype prediction. 
+
+Chang Xu*, Siyu Hou*, and Xiang Zhou (2026). Calibrated prediction intervals for polygenic scores: Updated comparisons, contextual calibration, and data normalization. [medRxiv](https://www.medrxiv.org/content/10.64898/2026.05.15.26353336v1).
 
 # Questions 
 If you have any questions on PredInterval software, please email to Chang Xu (xuchang@umich.edu).
